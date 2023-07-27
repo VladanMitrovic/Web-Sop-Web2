@@ -12,6 +12,7 @@ namespace web2projekat.Dto
         public int Kolicina { get; set; }
         public string Opis { get; set; }
        // public string Fotografija { get; set; }
+       
       
     }
 }

@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 using web2projekat.Data;
 using web2projekat.Dto;
 using web2projekat.Interfaces;
 using web2projekat.Models;
+using web2projekat.ParametersForQuery;
 
 namespace web2projekat.Services
 {
@@ -16,43 +19,51 @@ namespace web2projekat.Services
             _mapper= mapper1;
             _context = context;
         }
-        public ArtikalDto AddArtikal(ArtikalDto newArtikal, int id)
+        public ArtikalDto AddArtikal(ArtikalDtoAdd newArtikal, int id)
         {
+
             Artikal artikal = _mapper.Map<Artikal>(newArtikal);
-            Korisnik prodavac = _context.Korisnik.Find(id);
-            artikal.Prodavac = prodavac;
-            artikal.ProdavacId = prodavac.Id;
+            artikal.ProdavacId = id;
             _context.Artikal.Add(artikal);
             _context.SaveChanges();
             
-            return _mapper.Map<ArtikalDto>(newArtikal);
+            return _mapper.Map<ArtikalDto>(artikal);
 
         }
 
-        public void DeleteArtikal(int id)
+        public ArtikalDto DeleteArtikal(int id, int korisnikId)
         {
-            Artikal artikal = _context.Artikal.Find(id);
+            Artikal artikal = _context.Artikal.FirstOrDefault(a => a.Id == id && a.ProdavacId == korisnikId);
             _context.Artikal.Remove(artikal);
             _context.SaveChanges();
+            return _mapper.Map<ArtikalDto>(artikal);
         }
 
-        public List<ArtikalDto> GetArtikal()
+        public List<ArtikalDto> GetArtikal(QueryZaArtikal query)
         {
-            return _mapper.Map < List < ArtikalDto >> (_context.Artikal.ToList());
+            /* return _mapper.Map < List < ArtikalDto >> (_context.Artikal.ToList());*/
+            List<Artikal> artikli = _context.Artikal.ToList();
+            if(query.ProdavacId > 0)
+            {
+                artikli = artikli.Where(x => x.ProdavacId == query.ProdavacId).ToList();
+            }
+            return _mapper.Map<List<ArtikalDto>>(artikli); 
         }
 
         public ArtikalDto GetById(int id)
         {
-            return _mapper.Map<ArtikalDto>(_context.Artikal.Find(id));
+            ArtikalDto artikal = _mapper.Map<ArtikalDto>(_context.Artikal.Find(id));
+            return artikal; 
         }
 
-        public ArtikalDto UpdateArtikal(int id, ArtikalDto newArtikal)
+        public ArtikalDto UpdateArtikal(int idArtikal,int idKorisnik, ArtikalDtoAdd newArtikal)
         {
-            Artikal artikal = _context.Artikal.Find(id);
+            Artikal artikal = _context.Artikal.FirstOrDefault(a => a.Id== idArtikal && a.ProdavacId == idKorisnik );
             artikal.Naziv = newArtikal.Naziv;
             artikal.Cena = newArtikal.Cena;
             artikal.Kolicina = newArtikal.Kolicina;
             artikal.Opis = newArtikal.Opis;
+            artikal.Fotografija = newArtikal.Fotografija;
             //artikal.Fotografija = newArtikal.Fotografija;
 
             _context.SaveChanges();

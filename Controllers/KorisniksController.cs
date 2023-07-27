@@ -36,11 +36,17 @@ namespace web2projekat.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(int id)
         {
-            return Ok(_korisnikService.GetById(id));
+            /*return Ok(_korisnikService.GetById(id));*/
+            KorisnikDto korisnik = _korisnikService.GetById(id);
+            if(korisnik == null)
+            {
+                return NotFound("Korisnik nije pronadjen");
+            }
+            return Ok(korisnik);
         }
 
         [HttpPut("{id}")]
-        public IActionResult ChangeKorisnik(int id, [FromBody] KorisnikDto korisnik)
+        public IActionResult ChangeKorisnik(int id, [FromBody] KorisnikUpdateDto korisnik)
         {
             return Ok(_korisnikService.UpdateKorisnik(id, korisnik));
         }
@@ -49,17 +55,17 @@ namespace web2projekat.Controllers
         // POST: api/Korisniks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public IActionResult CreateKorisnik([FromBody] KorisnikDto korisnik)
+        public IActionResult RegistrujKorisnika([FromBody] KorisnikRegistracija noviKorisnik)
         {
-            return Ok(_korisnikService.AddKorisnik(korisnik));
+            KorisnikDto korisnik;
+            korisnik = _korisnikService.AddKorisnik(noviKorisnik);
+            return Ok(korisnik);
         }
-
-        // DELETE: api/Korisniks/5
-      /*  [HttpDelete("{id}")]
-       public ActionResult DeleteKorisnik(int id)
+        [HttpPost("login")]
+        public IActionResult UlogujKorisnika([FromBody] LoginZahtevDto loginZahtev)
         {
-            _korisnikService.DeleteKorisnik(id);
+            var odgovorDto = _korisnikService.UlogujSe(loginZahtev);
+            return Ok(odgovorDto);
         }
-        */
     }
 }

@@ -6,8 +6,9 @@ namespace web2projekat.Interfaces
     {
         List<KorisnikDto> GetKorisnik();
         KorisnikDto GetById(int id);
-        KorisnikDto AddKorisnik(KorisnikDto newKorisnik);
-        KorisnikDto UpdateKorisnik(int id, KorisnikDto newKorisnik);
+        KorisnikDto AddKorisnik(KorisnikRegistracija newKorisnik);
+        KorisnikDto UpdateKorisnik(int id, KorisnikUpdateDto newKorisnik);
+        LoginOdgovorDto UlogujSe(LoginZahtevDto loginZahtev);
         void DeleteKorisnik(int id);
     }
 }

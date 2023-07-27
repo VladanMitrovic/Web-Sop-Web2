@@ -8,9 +8,12 @@ namespace web2projekat.Mapping
     {
         public MapiranjeProfila()
         {
+        
             CreateMap<Korisnik, KorisnikDto>().ReverseMap();
             CreateMap<Artikal, ArtikalDto>().ReverseMap();
-            CreateMap<Narudzbina, NarudzbinaDto>().ReverseMap();    
+            CreateMap<Narudzbina, NarudzbinaDto>().ReverseMap();
+            CreateMap<Korisnik, KorisnikRegistracija>().ReverseMap();
+            CreateMap<Artikal, ArtikalDtoAdd>().ReverseMap();
         }
     }
 }
