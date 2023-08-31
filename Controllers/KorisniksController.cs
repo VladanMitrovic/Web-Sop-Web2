@@ -4,12 +4,14 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web2projekat.Data;
 using web2projekat.Dto;
 using web2projekat.Interfaces;
+using web2projekat.Izuzeci;
 using web2projekat.Models;
 
 namespace web2projekat.Controllers
@@ -48,7 +50,15 @@ namespace web2projekat.Controllers
         [HttpPut("{id}")]
         public IActionResult ChangeKorisnik(int id, [FromBody] KorisnikUpdateDto korisnik)
         {
-            return Ok(_korisnikService.UpdateKorisnik(id, korisnik));
+            try
+            {
+                return Ok(_korisnikService.UpdateKorisnik(id, korisnik));
+            }
+            catch(ActionExceptioncs e)
+            {
+                return NotFound(e.Message);
+            }
+            
         }
 
 
@@ -57,15 +67,51 @@ namespace web2projekat.Controllers
         [HttpPost]
         public IActionResult RegistrujKorisnika([FromBody] KorisnikRegistracija noviKorisnik)
         {
-            KorisnikDto korisnik;
-            korisnik = _korisnikService.AddKorisnik(noviKorisnik);
-            return Ok(korisnik);
+            try
+            {
+                KorisnikDto korisnik;
+                korisnik = _korisnikService.AddKorisnik(noviKorisnik);
+                return Ok(korisnik);
+            }
+            catch(ActionExceptioncs e)
+            {
+                return Conflict(e.Message);
+            }
+            
         }
         [HttpPost("login")]
         public IActionResult UlogujKorisnika([FromBody] LoginZahtevDto loginZahtev)
         {
-            var odgovorDto = _korisnikService.UlogujSe(loginZahtev);
-            return Ok(odgovorDto);
+            try
+            {
+                var odgovorDto = _korisnikService.UlogujSe(loginZahtev);
+                return Ok(odgovorDto);
+            }
+            catch(ActionExceptioncs e)
+            {
+                return Unauthorized(e.Message);
+            }
+            
+        }
+        [HttpPost("verify/{id}")]
+        [Authorize(Roles = "Administrator")]
+
+        public IActionResult VerifikujKorisnika(int id, [FromBody] VerifikacijaZahtevDto verifikacijaDto)
+        {
+            try
+            {
+                var korisnik = _korisnikService.ProveriKorisnika(id, verifikacijaDto);
+                return Ok(korisnik);
+            }
+            catch(Exception e) when (e is Exception)
+            {
+                return e switch
+                {
+                    Exception => NotFound(e.Message),
+                    //Exception => BadRequest(e.Message),
+                    _=> StatusCode(500, "Greska prilikom verifikacije")
+                };
+            }
         }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using web2projekat.Dto;
+using web2projekat.ParametersForQuery;
 
 namespace web2projekat.Interfaces
 {
     public interface INarudzbinaService
     {
-        List<NarudzbinaDto> GetNarudzbina();
+        List<NarudzbinaDto> GetNarudzbina(QueryZaNarudzbinu query);
         NarudzbinaDto GetById(long id);
-        NarudzbinaDto AddNarudzbina(NarudzbinaDto newNarudzbina, int id);
+        NarudzbinaDto AddNarudzbina(NarudzbinaAddDto newNarudzbina, int id);
         NarudzbinaDto UpdateNarudzbinak(long id, NarudzbinaDto newNarudzbina);
-        void DeleteNarudzbina(long id);
+        DeleteNarudzbinaDto DeleteNarudzbina(long id, int korisnikId);
     }
 }

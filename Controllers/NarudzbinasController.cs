@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using web2projekat.Data;
 using web2projekat.Dto;
 using web2projekat.Interfaces;
+using web2projekat.Izuzeci;
 using web2projekat.Models;
+using web2projekat.ParametersForQuery;
 
 namespace web2projekat.Controllers
 {
@@ -25,16 +29,25 @@ namespace web2projekat.Controllers
 
         // GET: api/Korisniks
         [HttpGet("all")]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] QueryZaNarudzbinu query)
         {
-            return Ok(_narudzbinaService.GetNarudzbina());
+            return Ok(_narudzbinaService.GetNarudzbina(query));
         }
 
         // GET: api/Korisniks/5
         [HttpGet("{id}")]
         public IActionResult Get(long id)
         {
-            return Ok(_narudzbinaService.GetById(id));
+            try
+            {
+                NarudzbinaDto narudzbina = _narudzbinaService.GetById(id);
+                return Ok(narudzbina);
+            }
+            catch(ActionExceptioncs e)
+            {
+                return NotFound(e.Message);
+            }
+            
         }
 
         [HttpPut("{id}")]
@@ -47,17 +60,45 @@ namespace web2projekat.Controllers
         // POST: api/Korisniks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public IActionResult CreateNarudzbina([FromBody] NarudzbinaDto narudzbina, int id)
+        [Authorize(Roles = "Kupac")]
+        public IActionResult CreateNarudzbina([FromBody] NarudzbinaAddDto narudzbina, int id)
         {
-            return Ok(_narudzbinaService.AddNarudzbina(narudzbina, id));
+            try
+            {
+                //long userId = long.Parse(User.Claims.FirstOrDefault(x => x.Type == "Id").Value);
+                NarudzbinaDto narudzbinaAdd = _narudzbinaService.AddNarudzbina(narudzbina, id);
+                return Ok(narudzbinaAdd);
+            }
+            catch (ActionExceptioncs e)
+            {
+                return NotFound(e.Message);
+            }
+            
         }
 
         // DELETE: api/Korisniks/5
-        /*  [HttpDelete("{id}")]
-         public ActionResult DeleteKorisnik(int id)
-          {
-              _korisnikService.DeleteKorisnik(id);
-          }
-          */
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Kupac")]
+        public IActionResult DeleteNarudzbina(long id, int korisnikId)
+         {
+            try
+            {
+                //long userId = long.Parse(User.Claims.FirstOrDefault(x => x.Type == "Id").Value);
+
+                DeleteNarudzbinaDto responseDto = _narudzbinaService.DeleteNarudzbina(id, korisnikId);
+
+                return Ok(responseDto);
+            }
+            catch (ActionExceptioncs e)
+            {
+                return NotFound(e.Message);
+            }
+            
+            catch (Exception)
+            {
+                return Forbid();
+            }
+         }
+          
     }
 }

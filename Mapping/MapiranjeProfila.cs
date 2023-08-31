@@ -12,6 +12,8 @@ namespace web2projekat.Mapping
             CreateMap<Korisnik, KorisnikDto>().ReverseMap();
             CreateMap<Artikal, ArtikalDto>().ReverseMap();
             CreateMap<Narudzbina, NarudzbinaDto>().ReverseMap();
+            CreateMap<Narudzbina, DeleteNarudzbinaDto>().ReverseMap();
+            CreateMap<Narudzbina, NarudzbinaAddDto>().ReverseMap();
             CreateMap<Korisnik, KorisnikRegistracija>().ReverseMap();
             CreateMap<Artikal, ArtikalDtoAdd>().ReverseMap();
         }

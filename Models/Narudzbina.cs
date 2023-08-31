@@ -9,6 +9,7 @@ namespace web2projekat.Models
         public Artikal Artikal { get; set; }
         public int ArtikalId { get; set; }
         public Korisnik Kupac { get; set; }
+        public int KupacId { get; set; }
         public StanjeArtikla Status { get; set; }
         public string Adresa { get; set; }
         public int Kolicina { get; set; }

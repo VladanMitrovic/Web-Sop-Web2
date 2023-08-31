@@ -44,6 +44,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("VerifikovanProdavac", policy => policy.RequireClaim("VerificationStatus", "Accepted"));
+});
 builder.Services.AddScoped<IKorisnikService, KorisnikService>();
 builder.Services.AddScoped<IArtikalService, ArtikalService>();
 builder.Services.AddScoped<INarudzbinaService, NarudzbinaService>();

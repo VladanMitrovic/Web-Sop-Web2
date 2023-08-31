@@ -10,5 +10,6 @@ namespace web2projekat.Interfaces
         KorisnikDto UpdateKorisnik(int id, KorisnikUpdateDto newKorisnik);
         LoginOdgovorDto UlogujSe(LoginZahtevDto loginZahtev);
         void DeleteKorisnik(int id);
+        VerifikacijaOdgovorDto ProveriKorisnika(int id, VerifikacijaZahtevDto verifikacijaZahtev);
     }
 }

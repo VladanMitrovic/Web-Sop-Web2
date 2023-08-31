@@ -13,6 +13,9 @@ using System.Collections.Generic;
 using BCrypt.Net;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using web2projekat.Izuzeci;
+using System.Security.Authentication;
+using EntityFramework.Exceptions.Common;
 
 namespace web2projekat.Services
 {
@@ -32,11 +35,22 @@ namespace web2projekat.Services
         public KorisnikDto AddKorisnik(KorisnikRegistracija registracija)
         {
             Korisnik korisnik = _mapper.Map<Korisnik>(registracija);
-
-            korisnik.Lozinka = BCrypt.Net.BCrypt.HashPassword(korisnik.Lozinka, BCrypt.Net.BCrypt.GenerateSalt());
-            _context.Korisnik.Add(korisnik);
-            _context.SaveChanges();
-            return _mapper.Map<KorisnikDto>(korisnik);
+            try
+            {
+                korisnik.Lozinka = BCrypt.Net.BCrypt.HashPassword(korisnik.Lozinka, BCrypt.Net.BCrypt.GenerateSalt());
+                _context.Korisnik.Add(korisnik);
+                _context.SaveChanges();
+                return _mapper.Map<KorisnikDto>(korisnik);
+            }
+            catch (UniqueConstraintException)
+            {
+                throw new ActionExceptioncs("Ovaj korisnik vec postoji");
+            }
+            catch(CannotInsertNullException)
+            {
+                throw new ActionExceptioncs("Sva polja moraju biti popunjena");
+            }
+           
         }
 
         public void DeleteKorisnik(int id)
@@ -49,10 +63,10 @@ namespace web2projekat.Services
         public KorisnikDto GetById(int id)
         {
             KorisnikDto korisnik = _mapper.Map<KorisnikDto>(_context.Korisnik.Find(id));
-            /*if(korisnik == null)
+            if(korisnik == null)
             {
-                return NotFoundResult("Korisnik sa ovim id ne postoji");
-            }*/
+               throw new ActionExceptioncs("Korisnik sa ovim id ne postoji");
+            }
             return korisnik;
         }
 
@@ -64,13 +78,30 @@ namespace web2projekat.Services
         public KorisnikDto UpdateKorisnik(int id, KorisnikUpdateDto newKorisnik)
         {
             Korisnik korisnik = _context.Korisnik.Find(id);
+            if(korisnik == null)
+            {
+                throw new ActionExceptioncs("Ovaj korisnik ne postoji");
+            }
             korisnik.KorisnickoIme = newKorisnik.KorisnickoIme;
             korisnik.Email = newKorisnik.Email;
             korisnik.Ime = newKorisnik.Ime;
             korisnik.Prezime = newKorisnik.Prezime;
             korisnik.DatumRodjenja = newKorisnik.DatumRodjenja;
             korisnik.Adresa = newKorisnik.Adresa;
-            _context.SaveChanges();
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch(UniqueConstraintException)
+            {
+                throw new ActionExceptioncs("Ovakav korisnik ne postoji!");
+            }
+            catch (CannotInsertNullException)
+            {
+                throw new ActionExceptioncs("Sva polja moraju biti popunjena!");
+            }
+
+
             return _mapper.Map<KorisnikDto>(korisnik);
             
         }
@@ -78,6 +109,10 @@ namespace web2projekat.Services
         public LoginOdgovorDto UlogujSe(LoginZahtevDto zahtevDto)
         {
             Korisnik korisnik = _context.Korisnik.FirstOrDefault(u => u.Email == zahtevDto.Email);
+            if (korisnik == null || !BCrypt.Net.BCrypt.Verify(zahtevDto.Password, korisnik.Lozinka))
+            {
+                throw new ActionExceptioncs("Incorrect login credentials!");
+            }
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim("Id", korisnik.Id.ToString()));
             claims.Add(new Claim(ClaimTypes.Role, korisnik.TipKorisnika.ToString()));
@@ -106,6 +141,20 @@ namespace web2projekat.Services
             };
 
             return responseDto;
+        }
+
+        public VerifikacijaOdgovorDto ProveriKorisnika(int id, VerifikacijaZahtevDto verifikacijaZahtev)
+        {
+            Korisnik korisnik = _context.Korisnik.Find(id);
+            if (korisnik == null)
+                throw new Exception("Korisnik sa ovim id-em ne postoji");
+
+            if (korisnik.TipKorisnika != TipKorisnika.Prodavac)
+                throw new Exception("Samo prodavci mogu biti verifikovani");
+
+            _mapper.Map(verifikacijaZahtev, korisnik);
+            _context.SaveChanges();
+            return _mapper.Map<VerifikacijaOdgovorDto>(korisnik);
         }
     }
 }
