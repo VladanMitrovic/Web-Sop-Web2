@@ -35,12 +35,14 @@ namespace web2projekat.Services
         public KorisnikDto AddKorisnik(KorisnikRegistracija registracija)
         {
             Korisnik korisnik = _mapper.Map<Korisnik>(registracija);
+            korisnik.Lozinka = BCrypt.Net.BCrypt.HashPassword(korisnik.Lozinka, BCrypt.Net.BCrypt.GenerateSalt());
+            _context.Korisnik.Add(korisnik);
             try
             {
-                korisnik.Lozinka = BCrypt.Net.BCrypt.HashPassword(korisnik.Lozinka, BCrypt.Net.BCrypt.GenerateSalt());
-                _context.Korisnik.Add(korisnik);
+                
+                
                 _context.SaveChanges();
-                return _mapper.Map<KorisnikDto>(korisnik);
+                
             }
             catch (UniqueConstraintException)
             {
@@ -50,7 +52,8 @@ namespace web2projekat.Services
             {
                 throw new ActionExceptioncs("Sva polja moraju biti popunjena");
             }
-           
+            return _mapper.Map<KorisnikDto>(korisnik);
+
         }
 
         public void DeleteKorisnik(int id)

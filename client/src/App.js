@@ -1,24 +1,33 @@
-import logo from './logo.svg';
+import { Route, Routes, BrowserRouter } from 'react-router-dom'; // Dodajte 'BrowserRouter'
+import Login from './pages/Login';
+import Register from './pages/Registracija';
+import { useState, useEffect } from 'react';
+
 import './App.css';
 
-function App() {
+const App = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    // navigate('/home'); // Pretpostavljam da želite da koristite rutu '/home' nakon logina, možete je dodati ovde
+  };
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    
+      <Routes>
+        <Route path="/" element={<Login onLogin={handleLogin}/>} />
+        <Route path="/registration" element={<Register/>} />
+      </Routes>
+    
   );
 }
 

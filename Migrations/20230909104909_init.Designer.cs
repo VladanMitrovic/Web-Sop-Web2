@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using web2projekat.Data;
 
@@ -11,9 +12,11 @@ using web2projekat.Data;
 namespace web2projekat.Migrations
 {
     [DbContext(typeof(web2projekatContext))]
-    partial class web2projekatContextModelSnapshot : ModelSnapshot
+    [Migration("20230909104909_init")]
+    partial class init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

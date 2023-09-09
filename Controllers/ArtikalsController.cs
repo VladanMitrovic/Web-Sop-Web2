@@ -50,7 +50,7 @@ namespace web2projekat.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Prodavac")]
+        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
         public IActionResult ChangeArtikal(int id,int idKorisnik, [FromBody] ArtikalDtoAdd artikal)
         {
             try
@@ -70,7 +70,7 @@ namespace web2projekat.Controllers
         // POST: api/Korisniks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Prodavac")]
+        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
         public IActionResult CreateArtikal([FromBody] ArtikalDtoAdd artikal, int id)
         {
             if(!ModelState.IsValid)
@@ -93,7 +93,7 @@ namespace web2projekat.Controllers
 
         // DELETE: api/Korisniks/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Prodavac")]
+        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
         public ActionResult DeleteArtikal(int id, int korisnikId)
          {
             try

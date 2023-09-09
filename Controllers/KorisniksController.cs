@@ -67,6 +67,11 @@ namespace web2projekat.Controllers
         [HttpPost]
         public IActionResult RegistrujKorisnika([FromBody] KorisnikRegistracija noviKorisnik)
         {
+            if (!ModelState.IsValid)
+            {
+                // Ako ModelState nije validan, vratite odgovarajući odgovor
+                return BadRequest(ModelState);
+            }
             try
             {
                 KorisnikDto korisnik;
