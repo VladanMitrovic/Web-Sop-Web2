@@ -28,10 +28,14 @@ namespace web2projekat.Controllers
         }
 
         // GET: api/Korisniks
-        [HttpGet("all")]
-        public IActionResult GetAll([FromQuery] QueryZaNarudzbinu query)
+        [HttpGet]
+        public IActionResult GetAll()
         {
-            return Ok(_narudzbinaService.GetNarudzbina(query));
+            Console.WriteLine("GetAll method called."); 
+            var narudzbine = _narudzbinaService.GetNarudzbina();
+            Console.WriteLine($"Returned {narudzbine.Count} narudzbina.");
+            return Ok(narudzbine);
+            
         }
 
         // GET: api/Korisniks/5
@@ -43,55 +47,59 @@ namespace web2projekat.Controllers
                 NarudzbinaDto narudzbina = _narudzbinaService.GetById(id);
                 return Ok(narudzbina);
             }
-            catch(ActionExceptioncs e)
+            catch (ActionExceptioncs e)
             {
                 return NotFound(e.Message);
             }
-            
+
         }
 
         [HttpPut("{id}")]
-        public IActionResult ChangeNarudzbina(long id, [FromBody] NarudzbinaDto narudzbina)
+        public IActionResult ChangeNarudzbina(int id, [FromBody] NarudzbinaDto narudzbina)
         {
-            return Ok(_narudzbinaService.UpdateNarudzbinak(id, narudzbina));
+            return Ok(_narudzbinaService.UpdateNarudzbinak(narudzbina, id));
         }
 
 
         // POST: api/Korisniks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Kupac")]
-        public IActionResult CreateNarudzbina([FromBody] NarudzbinaAddDto narudzbina, int id)
+        
+        public IActionResult CreateNarudzbina(int userId, [FromBody] NarudzbinaDto narudzbina)
         {
+            if (!ModelState.IsValid)
+            {
+                // Log validacione greške
+                return BadRequest(ModelState);
+            }
             try
             {
-                //long userId = long.Parse(User.Claims.FirstOrDefault(x => x.Type == "Id").Value);
-                NarudzbinaDto narudzbinaAdd = _narudzbinaService.AddNarudzbina(narudzbina, id);
+                
+                NarudzbinaDto narudzbinaAdd = _narudzbinaService.AddNarudzbina(narudzbina, userId);
                 return Ok(narudzbinaAdd);
             }
-            catch (ActionExceptioncs e)
+            catch (Exception)
             {
-                return NotFound(e.Message);
+                return BadRequest();
             }
             
         }
 
         // DELETE: api/Korisniks/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Kupac")]
-        public IActionResult DeleteNarudzbina(long id, int korisnikId)
+        
+        public IActionResult DeleteNarudzbina(long id)
          {
             try
             {
-                //long userId = long.Parse(User.Claims.FirstOrDefault(x => x.Type == "Id").Value);
+            
 
-                DeleteNarudzbinaDto responseDto = _narudzbinaService.DeleteNarudzbina(id, korisnikId);
-
-                return Ok(responseDto);
+                _narudzbinaService.DeleteNarudzbina(id);
+                return Ok();
             }
             catch (ActionExceptioncs e)
             {
-                return NotFound(e.Message);
+                return BadRequest(e.Message);
             }
             
             catch (Exception)

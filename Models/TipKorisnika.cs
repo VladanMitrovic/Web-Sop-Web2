@@ -3,7 +3,7 @@
     public enum TipKorisnika
     {
         Administrator,
-        Prodavac,
-        Kupac
+        Korisnik,
+        Prodavac
     }
 }

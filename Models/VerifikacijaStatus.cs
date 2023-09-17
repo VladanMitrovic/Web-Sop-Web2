@@ -2,8 +2,8 @@
 {
     public enum VerifikacijaStatus
     {
-        Neresen,
+        Prihvacen,
         Odbijen,
-        Prihvacen
+        Neresen
     }
 }

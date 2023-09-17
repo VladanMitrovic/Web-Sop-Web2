@@ -5,10 +5,10 @@ namespace web2projekat.Interfaces
 {
     public interface INarudzbinaService
     {
-        List<NarudzbinaDto> GetNarudzbina(QueryZaNarudzbinu query);
+        List<NarudzbinaDto> GetNarudzbina();
         NarudzbinaDto GetById(long id);
-        NarudzbinaDto AddNarudzbina(NarudzbinaAddDto newNarudzbina, int id);
-        NarudzbinaDto UpdateNarudzbinak(long id, NarudzbinaDto newNarudzbina);
-        DeleteNarudzbinaDto DeleteNarudzbina(long id, int korisnikId);
+        NarudzbinaDto AddNarudzbina(NarudzbinaDto newNarudzbina, int userId);
+        NarudzbinaDto UpdateNarudzbinak(NarudzbinaDto newNarudzbina, int id);
+        void DeleteNarudzbina(long id);
     }
 }

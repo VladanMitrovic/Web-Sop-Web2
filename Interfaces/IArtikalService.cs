@@ -8,7 +8,7 @@ namespace web2projekat.Interfaces
         List<ArtikalDto> GetArtikal(QueryZaArtikal query);
         ArtikalDto GetById(int id);
         ArtikalDto AddArtikal(ArtikalDtoAdd newArtikal, int id);
-        ArtikalDto UpdateArtikal(int id,int idKorisnik, ArtikalDtoAdd newArtikal);
-        ArtikalDto DeleteArtikal(int id, int korisnikId);
+        bool UpdateArtikal(ArtikalDtoAdd newArtikal, int prodavacId);
+        bool DeleteArtikal(int id);
     }
 }

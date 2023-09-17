@@ -2,10 +2,11 @@
 {
     public class ArtikalDtoAdd
     {
+        public int Id { get; set; }
         public string Naziv { get; set; }
-        public float Cena { get; set; }
+        public double Cena { get; set; }
         public int Kolicina { get; set; }
         public string Opis { get; set; }
-        public string Fotografija { get; set; }
+        public int ProdavacId { get; set; }
     }
 }

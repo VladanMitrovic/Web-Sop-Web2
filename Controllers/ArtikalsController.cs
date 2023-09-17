@@ -50,12 +50,11 @@ namespace web2projekat.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
-        public IActionResult ChangeArtikal(int id,int idKorisnik, [FromBody] ArtikalDtoAdd artikal)
+        public IActionResult ChangeArtikal(int id, ArtikalDtoAdd artikal)
         {
             try
             {
-                return Ok(_artikalService.UpdateArtikal(id, idKorisnik, artikal));
+                return Ok(_artikalService.UpdateArtikal(artikal, id));
             }
             catch(ActionExceptioncs e)
             {
@@ -63,25 +62,25 @@ namespace web2projekat.Controllers
             }
             catch(Exception) 
             {
-                return Forbid();
+                return BadRequest();
             }
             
         }
         // POST: api/Korisniks
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
-        public IActionResult CreateArtikal([FromBody] ArtikalDtoAdd artikal, int id)
+        
+        public IActionResult CreateArtikal([FromBody]ArtikalDtoAdd artikal, int prodavacId)
         {
             if(!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-           // int prodavacId = int.Parse(User.Claims.FirstOrDefault(x => x.Type == "Id").Value);
+           
            try
             {
-                var noviArtikal = _artikalService.AddArtikal(artikal, id);
+                var noviArtikal = _artikalService.AddArtikal(artikal, prodavacId);
                 return Ok(noviArtikal);
             }
             catch(ActionExceptioncs e)
@@ -93,12 +92,11 @@ namespace web2projekat.Controllers
 
         // DELETE: api/Korisniks/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Prodavac", Policy = "VerifikovanProdavac")]
-        public ActionResult DeleteArtikal(int id, int korisnikId)
+        public ActionResult DeleteArtikal(int id)
          {
             try
             {
-                return Ok(_artikalService.DeleteArtikal(id, korisnikId));
+                return Ok(_artikalService.DeleteArtikal(id));
             }
             catch(ActionExceptioncs e)
             {

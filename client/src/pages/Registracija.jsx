@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router';
 
-
-function Register(props) {
+function Registracija(props) {
   const [korisnickoIme, setKorisnickoIme] = useState('');
   const [lozinka, setLozinka] = useState('');
   const [email, setEmail] = useState('');
@@ -13,143 +12,150 @@ function Register(props) {
   const [datumRodjenja, setDatumRodjenja] = useState('');
   const [tipKorisnika, setTipKorisnika] = useState('');
   const [slikaKorisnika, setSlikaKorisnika] = useState('');
-
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const Registracija = async (e) => {
     e.preventDefault();
-
     const korisnikDto = {
-      Username: korisnickoIme,
-      Password: lozinka,
+      KorisnickoIme: korisnickoIme,
+      Lozinka: lozinka,
       Email: email,
-      Name: ime,
-      Surname: prezime,
-      Address: adresa,
-      BirthDay: datumRodjenja,
-      Role: parseInt(tipKorisnika),
-      ProfilePicture: slikaKorisnika,
+      Ime: ime,
+      Prezime: prezime,
+      Adresa: adresa,
+      DatumRodjenja: datumRodjenja,
+      TipKorisnika: parseInt(tipKorisnika),
+      SlikaKorisnika: slikaKorisnika,
     };
 
-    console.log('Korisnik DTO:', korisnikDto);
-
     try {
-      axios
-        .post(process.env.REACT_APP_USERS, korisnikDto)
-        .then((response) => {
-          console.log('Product successfully created:', response.data);
-          console.log('response', response);
-          navigate('/');
-        })
-        .catch(() => {
-          window.alert('Username or email are already taken');
-          navigate('/registration');
-        });
-    } catch {
-      window.alert('Something went wrong');
-      navigate('/registration');
+      const response = await axios.post(process.env.REACT_APP_USERS, korisnikDto, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    
+      console.log('Registracija je uspesna:', response.data);
+      navigate('/');
+    } catch (error) {
+      if (error.response) {
+        const { status } = error.response;
+        const errorMessage = status === 400 ? 'Neispravni podaci' : 'Došlo je do greške';
+        window.alert(errorMessage);
+        setErrors(error.response.data.errors);
+      } else {
+        console.error(error);
+        window.alert('Došlo je do greške');
+      }
+      navigate('/registracija');
     }
   };
 
   return (
-    <form className="register-form" onSubmit={handleRegister}>
-      <br />
-      <br />
-      <h3 style={{ color: 'white' }}>Register</h3>
-      <br />
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Username"
-          value={korisnickoIme}
-          onChange={(e) => setKorisnickoIme(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="email"
-          className="form-control"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="password"
-          className="form-control"
-          placeholder="Password"
-          value={lozinka}
-          onChange={(e) => setLozinka(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Name"
-          value={ime}
-          onChange={(e) => setIme(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Surname"
-          value={prezime}
-          onChange={(e) => setPrezime(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Address"
-          value={adresa}
-          onChange={(e) => setAdresa(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <input
-          type="date"
-          className="form-control"
-          placeholder="BirthDay"
-          value={datumRodjenja}
-          onChange={(e) => setDatumRodjenja(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label className="role-label" style={{ color: 'white' }}>
-          So...Who are you?
-        </label>
-        <select className="form-control" value={tipKorisnika} onChange={(e) => setTipKorisnika(e.target.value)}>
-          <option value="">Select a role</option>
-          <option value="1">User</option>
-          <option value="2">Seller</option>
-        </select>
-      </div>
-      <div className="form-group">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Profile Picture"
-          value={slikaKorisnika}
-          onChange={(e) => setSlikaKorisnika(e.target.value)}
-        />
-      </div>
-      <button type="submit" className="btn btn-primary">
-        Register
-      </button>
-      <div>
-        <br />
-        <button type="button" className="btn btn-secondary" onClick={() => navigate('/media')}>
-          Register using social media
-        </button>
-      </div>
-    </form>
+    <form className="forma-registracije" onSubmit={Registracija}>
+  <br />
+  <br />
+  <h3 style={{ color: 'black' }}>Registruj se</h3>
+  <br />
+  <div className="form-grupa">
+    <input
+      type="text"
+      className="form-input"
+      placeholder="Korisničko ime"
+      value={korisnickoIme}
+      onChange={(e) => setKorisnickoIme(e.target.value)}
+    />
+    {errors.KorisnickoIme && <div className="neispravan-unos">{errors.KorisnickoIme[0]}</div>}
+  </div>
+  <div className="form-grupa">
+    <input
+      type="email"
+      className="form-input"
+      placeholder="Email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+    <input
+      type="password"
+      className="form-input"
+      placeholder="Lozinka"
+      value={lozinka}
+      onChange={(e) => setLozinka(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+    <input
+      type="text"
+      className="form-input"
+      placeholder="Ime"
+      value={ime}
+      onChange={(e) => setIme(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+    <input
+      type="text"
+      className="form-input"
+      placeholder="Prezime"
+      value={prezime}
+      onChange={(e) => setPrezime(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+    <input
+      type="text"
+      className="form-input"
+      placeholder="Adresa"
+      value={adresa}
+      onChange={(e) => setAdresa(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+  <label className="uloga-label" style={{ color: 'black' }}>
+      Datum rodjenja?
+    </label>
+    <input
+      type="date"
+      className="form-input"
+      placeholder="Datum rođenja"
+      value={datumRodjenja}
+      onChange={(e) => setDatumRodjenja(e.target.value)}
+    />
+  </div>
+  <div className="form-grupa">
+    <label className="uloga-label" style={{ color: 'black' }}>
+      Uloga?
+    </label>
+    <select className="form-input" value={tipKorisnika} onChange={(e) => setTipKorisnika(e.target.value)}>
+      <option value="0">Administrator</option>
+      <option value="1">Kupac</option>
+      <option value="2">Prodavac</option>
+    </select>
+  </div>
+  <div className="form-grupa">
+    <input
+      type="text"
+      className="form-input"
+      placeholder="Slika korisnika"
+      value={slikaKorisnika}
+      onChange={(e) => setSlikaKorisnika(e.target.value)}
+    />
+  </div>
+  <button type="submit" className="btn btn-primary">
+    Registruj se
+  </button>
+  <div>
+    <br />
+    <button type="button" className="btn btn-secondary" onClick={() => navigate('/media')}>
+      Registruj se preko društvene mreže
+    </button>
+  </div>
+</form>
+
   );
 }
 
-export default Register;
+export default Registracija;

@@ -28,7 +28,7 @@ namespace web2projekat.Controllers
         }
 
         // GET: api/Korisniks
-        [HttpGet("all")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             return Ok(_korisnikService.GetKorisnik());
@@ -69,7 +69,7 @@ namespace web2projekat.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Ako ModelState nije validan, vratite odgovarajući odgovor
+                
                 return BadRequest(ModelState);
             }
             try
@@ -87,25 +87,27 @@ namespace web2projekat.Controllers
         [HttpPost("login")]
         public IActionResult UlogujKorisnika([FromBody] LoginZahtevDto loginZahtev)
         {
+            string token;
             try
             {
-                var odgovorDto = _korisnikService.UlogujSe(loginZahtev);
-                return Ok(odgovorDto);
+               
+                token = _korisnikService.UlogujSe(loginZahtev);
             }
-            catch(ActionExceptioncs e)
+            catch(Exception)
             {
-                return Unauthorized(e.Message);
+                return BadRequest();
             }
-            
-        }
-        [HttpPost("verify/{id}")]
-        [Authorize(Roles = "Administrator")]
+            return Ok(token);
 
-        public IActionResult VerifikujKorisnika(int id, [FromBody] VerifikacijaZahtevDto verifikacijaDto)
+        }
+        [HttpPost("verify")]
+        
+
+        public IActionResult VerifikujKorisnika([FromBody] VerifikacijaOdgovorDto verifikacijaDto)
         {
             try
             {
-                var korisnik = _korisnikService.ProveriKorisnika(id, verifikacijaDto);
+                var korisnik = _korisnikService.ProveriKorisnika(verifikacijaDto);
                 return Ok(korisnik);
             }
             catch(Exception e) when (e is Exception)
@@ -117,6 +119,13 @@ namespace web2projekat.Controllers
                     _=> StatusCode(500, "Greska prilikom verifikacije")
                 };
             }
+        }
+        // GET: api/Users/email
+        [HttpGet("email")]
+        public IActionResult GetUserByEmail(string email)
+        {
+            KorisnikDto user = _korisnikService.EmailKorisnik(email);
+            return Ok(user);
         }
     }
 }

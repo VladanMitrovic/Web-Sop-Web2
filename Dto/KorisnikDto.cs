@@ -13,6 +13,7 @@ namespace web2projekat.Dto
         public string DatumRodjenja { get; set; }
         public string Adresa { get; set; }
         public TipKorisnika? TipKorisnika { get; set; }
+        public VerifikacijaStatus? VerifikacijaStatus { get; set; }
         public string? SlikaKorisnika { get; set; }
     }
 }

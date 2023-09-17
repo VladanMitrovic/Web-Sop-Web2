@@ -16,6 +16,7 @@ using System.IdentityModel.Tokens.Jwt;
 using web2projekat.Izuzeci;
 using System.Security.Authentication;
 using EntityFramework.Exceptions.Common;
+using System.Net.Mail;
 
 namespace web2projekat.Services
 {
@@ -36,21 +37,34 @@ namespace web2projekat.Services
         {
             Korisnik korisnik = _mapper.Map<Korisnik>(registracija);
             korisnik.Lozinka = BCrypt.Net.BCrypt.HashPassword(korisnik.Lozinka, BCrypt.Net.BCrypt.GenerateSalt());
-            _context.Korisnik.Add(korisnik);
+
+            Korisnik korisnikEmail = _context.Korisnik.FirstOrDefault(u=> u.Email == registracija.Email);
+            if(korisnikEmail != null) {
+
+                throw new Exception("Korisnik sa ovim email vec postoji!");
+            }
+
+            Korisnik korisnickoIme = _context.Korisnik.FirstOrDefault(u => u.KorisnickoIme == registracija.KorisnickoIme);
+            if(korisnickoIme != null)
+            {
+                throw new Exception("Korisnik sa ovim korisnickim imenom vec postojiu!");
+            }
             try
             {
-                
-                
-                _context.SaveChanges();
-                
+                MailAddress userMail = new MailAddress(korisnik.Email);
             }
-            catch (UniqueConstraintException)
+            catch (FormatException)
             {
-                throw new ActionExceptioncs("Ovaj korisnik vec postoji");
+
+                throw new Exception("Nepostojeci email");
             }
-            catch(CannotInsertNullException)
+            _context.Add(korisnik);
+            _context.SaveChanges();
+            if(registracija.TipKorisnika == TipKorisnika.Prodavac)
             {
-                throw new ActionExceptioncs("Sva polja moraju biti popunjena");
+                EmailSender mail = new EmailSender();
+                mail.SendVerificationEmail(registracija.Email, "Vas nalog je kreiran admin ce potvrditi vasu verifikaciju." +
+                                                         "Povratak na aplikaciju: http://localhost:3000/home");
             }
             return _mapper.Map<KorisnikDto>(korisnik);
 
@@ -109,7 +123,7 @@ namespace web2projekat.Services
             
         }
 
-        public LoginOdgovorDto UlogujSe(LoginZahtevDto zahtevDto)
+        public string UlogujSe(LoginZahtevDto zahtevDto)
         {
             Korisnik korisnik = _context.Korisnik.FirstOrDefault(u => u.Email == zahtevDto.Email);
             if (korisnik == null || !BCrypt.Net.BCrypt.Verify(zahtevDto.Password, korisnik.Lozinka))
@@ -119,10 +133,6 @@ namespace web2projekat.Services
             List<Claim> claims = new List<Claim>();
             claims.Add(new Claim("Id", korisnik.Id.ToString()));
             claims.Add(new Claim(ClaimTypes.Role, korisnik.TipKorisnika.ToString()));
-           /* if(korisnik.TipKorisnika == TipKorisnika.Prodavac)
-            {
-
-            }*/
             SymmetricSecurityKey secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_token.Value));
 
             // Kreira potpisne kredencijale za potpisivanje JWT tokena
@@ -136,28 +146,28 @@ namespace web2projekat.Services
                 signingCredentials: signingCredentials
             );
 
-            // Kreira odgovor koji sadrži Id korisnika i generisani JWT token
-            LoginOdgovorDto responseDto = new LoginOdgovorDto()
-            {
-                Id = korisnik.Id,
-                Token = new JwtSecurityTokenHandler().WriteToken(securityToken)
-            };
 
-            return responseDto;
+            return new JwtSecurityTokenHandler().WriteToken(securityToken);
         }
 
-        public VerifikacijaOdgovorDto ProveriKorisnika(int id, VerifikacijaZahtevDto verifikacijaZahtev)
+        public KorisnikDto ProveriKorisnika(VerifikacijaOdgovorDto verifikacija)
         {
-            Korisnik korisnik = _context.Korisnik.Find(id);
+            Korisnik korisnik = _context.Korisnik.Find(verifikacija.Id);
             if (korisnik == null)
                 throw new Exception("Korisnik sa ovim id-em ne postoji");
 
             if (korisnik.TipKorisnika != TipKorisnika.Prodavac)
                 throw new Exception("Samo prodavci mogu biti verifikovani");
 
-            _mapper.Map(verifikacijaZahtev, korisnik);
+            korisnik.VerifikacijaStatus = verifikacija.VerifikacijaStatus;
             _context.SaveChanges();
-            return _mapper.Map<VerifikacijaOdgovorDto>(korisnik);
+            return _mapper.Map<KorisnikDto>(korisnik);
+        }
+
+        public KorisnikDto EmailKorisnik(string email)
+        {
+            Korisnik korisnik = _context.Korisnik.FirstOrDefault(x => x.Email == email);
+            return _mapper.Map<KorisnikDto>(korisnik);
         }
     }
 }

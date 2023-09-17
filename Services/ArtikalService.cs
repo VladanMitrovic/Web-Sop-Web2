@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EntityFramework.Exceptions.Common;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using web2projekat.Data;
@@ -23,12 +24,17 @@ namespace web2projekat.Services
         public ArtikalDto AddArtikal(ArtikalDtoAdd newArtikal, int id)
         {
             Artikal artikal = _mapper.Map<Artikal>(newArtikal);
+            
             try
             {
+                
                 artikal.ProdavacId = id;
                 _context.Artikal.Add(artikal);
-                _context.SaveChanges();  
+                
+                _context.SaveChanges();
+                
             }
+          
             catch (CannotInsertNullException)
             {
                 throw new ActionExceptioncs("Sva polja moraju biti popunjena!");
@@ -40,18 +46,18 @@ namespace web2projekat.Services
             return _mapper.Map<ArtikalDto>(artikal);
         }
 
-        public ArtikalDto DeleteArtikal(int id, int korisnikId)
+        public bool DeleteArtikal(int id)
         {
             
-            Artikal artikal = _context.Artikal.FirstOrDefault(a => a.Id == id && a.ProdavacId == korisnikId);
-            if (artikal == null || artikal.ProdavacId != korisnikId)
+            Artikal artikal = _context.Artikal.FirstOrDefault(a => a.Id == id);
+            if (artikal == null)
             {
                 throw new ActionExceptioncs(artikal == null ? "Ovaj artikal ne postoji!" : "Prodavci mogu da azuriraju samo sopstvene proizvode!");
             }
             
             _context.Artikal.Remove(artikal);
             _context.SaveChanges();
-            return _mapper.Map<ArtikalDto>(artikal);
+            return true;
             
         }
 
@@ -90,30 +96,27 @@ namespace web2projekat.Services
            
         }
 
-        public ArtikalDto UpdateArtikal(int idArtikal,int idKorisnik, ArtikalDtoAdd newArtikal)
+        public bool UpdateArtikal(ArtikalDtoAdd newArtikal, int prodavacId)
         {
-            
-            Artikal artikal = _context.Artikal.FirstOrDefault(a => a.Id == idArtikal && a.ProdavacId == idKorisnik);
-            if (artikal == null || artikal.ProdavacId != idKorisnik)
+            Artikal artikal = _context.Artikal.Find(newArtikal.Id);
+            if(artikal != null)
             {
-                throw new ActionExceptioncs(artikal == null ? "Ovaj artikal ne postoji!" : "Prodavci mogu da azuriraju samo sopstvene proizvode!"); 
-            }
-            
-            artikal.Naziv = newArtikal.Naziv;
-            artikal.Cena = newArtikal.Cena;
-            artikal.Kolicina = newArtikal.Kolicina;
-            artikal.Opis = newArtikal.Opis;
-            artikal.Fotografija = newArtikal.Fotografija;
-            try
-            {
+                artikal.Naziv = newArtikal.Naziv;
+                artikal.Opis = newArtikal.Opis;
+                artikal.Cena = newArtikal.Cena;
+                artikal.Kolicina = newArtikal.Kolicina;
+                artikal.Prodavac = _context.Korisnik.Find(prodavacId);
+                if(artikal.Prodavac == null)
+                {
+                    return false;
+                }
                 _context.SaveChanges();
+                return true;
             }
-            catch(CannotInsertNullException) 
+            else
             {
-                throw new ActionExceptioncs("Sva polja moraju biti popunjena!");
+                return false;
             }
-            return _mapper.Map<ArtikalDto>(artikal);
-           
            
         }
     }

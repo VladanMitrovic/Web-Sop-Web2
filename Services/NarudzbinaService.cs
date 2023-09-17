@@ -20,80 +20,75 @@ namespace web2projekat.Services
             _mapper = mapper1;
             _context = context; 
         }
-        public NarudzbinaDto AddNarudzbina(NarudzbinaAddDto newNarudzbina, int korisnikId)
+        public NarudzbinaDto AddNarudzbina(NarudzbinaDto newNarudzbina, int userId)
         {
-            Artikal artikal = _context.Artikal.FirstOrDefault(x => x.Id == newNarudzbina.ArtikalId);
-            if (artikal == null || artikal.Kolicina < newNarudzbina.Kolicina)
+            Narudzbina narudzbina = _mapper.Map<Narudzbina>(newNarudzbina);
+            Korisnik kupac = _context.Korisnik.Find(userId);
+            if (kupac == null)
             {
-                throw new ActionExceptioncs(artikal == null ? "Ovaj artikal ne postoji!" : "Nema dovoljno artikala!");
+                throw new Exception("Korisnik sa ovim id-jem ne postoji");
             }
-            /*if (article == null)
+            else
             {
-                throw new ResourceNotFoundException("Article with specified id doesn't exist!");
+                narudzbina.Kupac = kupac;
             }
-
-            if (article.Quantity < requestDto.Quantity)
+            Artikal artikal = _context.Artikal.Find(narudzbina.ArtikalId);
+            if (artikal == null)
             {
-                throw new InvalidFieldsException("There are not enough articles in stock!");
-            }*/
+                throw new Exception("Artikal sa ovim id-jem ne postoji");
+            }
+            narudzbina.PordavacId = artikal.ProdavacId;
+            narudzbina.ImeProdavca = _context.Korisnik.Find(artikal.ProdavacId).Ime;
+            artikal.Kolicina -= narudzbina.Kolicina;
+            narudzbina.Status = StanjeArtikla.Rezervisano;
+            narudzbina.Cena = artikal.Cena * narudzbina.Kolicina;
+            TimeZoneInfo belgradeTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
 
-            artikal.Kolicina -= newNarudzbina.Kolicina;
-            Narudzbina narudzbina = new Narudzbina
-            {
-                KupacId =  korisnikId,
-                ArtikalId = artikal.Id,
-                Status = StanjeArtikla.Isporuka,
-                //Cena = artikal.Cena * newNarudzbina.Kolicina,
-                DatumPorucivanja = DateTime.UtcNow,
-                Adresa = newNarudzbina.Adresa
-                
-                //DatumStizanja = new Random().Next(1, 25)
-
-            };
-            _context.Narudzbina.Add(narudzbina);
+            narudzbina.DatumPorucivanja = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, belgradeTimeZone);
+            Random rnd = new Random();
+            narudzbina.DatumStizanja = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow.AddHours(rnd.Next(1, 48)), belgradeTimeZone);
             try
             {
+                _context.Add(narudzbina);
                 _context.SaveChanges();
-            }
-            catch(CannotInsertNullException)
-            {
-                throw new ActionExceptioncs("Narudzbina sa ovim Id-jem vec postoji");
+
+                return _mapper.Map<NarudzbinaDto>(narudzbina);
             }
             catch (Exception)
             {
-                throw;
+                throw new Exception("Nije moguce porucivanje");
             }
-            return _mapper.Map<NarudzbinaDto>(narudzbina);
+            
         }
 
-        public DeleteNarudzbinaDto DeleteNarudzbina(long id, int korisnikId)
+        public void DeleteNarudzbina(long id)
         {
-            var narudzbina = _context.Narudzbina
-                                     .Include(n => n.Artikal)
-                                     .FirstOrDefault(n => n.Id == id);
-            if (narudzbina == null || narudzbina.KupacId != korisnikId)
+            Narudzbina narudzbina = _context.Narudzbina.Find(id);
+            if (narudzbina != null)
             {
-                throw new ActionExceptioncs(narudzbina == null ? "Ova narudzbina ne postoji!" : "Prodavci mogu da otkazu samo sopstvene narudzbine!");
-            }
-            /*if (order == null)
-            {
-                throw new ResourceNotFoundException("Order with specified id doesn't exist!");
-            }
 
-            if (order.BuyerId != userId)
-            {
-                throw new ForbiddenActionException("Buyers can only cancel their own orders!");
-            }*/
-            var vremeOdKreiranja = (DateTime.UtcNow - narudzbina.DatumPorucivanja).TotalHours;
-            if(vremeOdKreiranja > 1)
-            {
-                throw new ActionExceptioncs("Narudzbine mogu biti otkazane tokom prvog sata!");
-            }
-            narudzbina.Artikal.Kolicina += narudzbina.Kolicina;
-            _context.Narudzbina.Remove(narudzbina);
-            _context.SaveChanges();
+                
+                DateTime minimalnoVremeZaOtkazivanjeNarudzbine = narudzbina.DatumPorucivanja.AddHours(1);
 
-            return _mapper.Map<DeleteNarudzbinaDto>(narudzbina);
+                if (DateTime.UtcNow.ToLocalTime() >= minimalnoVremeZaOtkazivanjeNarudzbine)
+                {
+                    Artikal artikal = _context.Artikal.Find(narudzbina.ArtikalId);
+
+                    if (artikal == null)
+                    {
+                        throw new Exception("Artikal sa ovim id-jem ne postoji!");
+                    }
+
+                    artikal.Kolicina += narudzbina.Kolicina;
+                    _context.Narudzbina.Remove(narudzbina);
+                    _context.SaveChanges();
+                }
+                else
+                {
+                    throw new Exception("Ova narudzbina ne moze biti izbrisana.");
+                }
+            }
+            
         }
 
         public NarudzbinaDto GetById(long id)
@@ -106,23 +101,15 @@ namespace web2projekat.Services
             return _mapper.Map<NarudzbinaDto>(narudzbina);
         }
 
-        public List<NarudzbinaDto> GetNarudzbina(QueryZaNarudzbinu queryParametri)
+        public List<NarudzbinaDto> GetNarudzbina()
         {
-            IQueryable<Narudzbina> query = _context.Narudzbina;
-            if(queryParametri.IdKupca>0)
-            {
-                query = query.Where(x => x.Kupac.Id == queryParametri.IdKupca);
-            }
-            else if(queryParametri.IdProdavca > 0)
-            {
-                query = query.Where(x => x.Artikal.ProdavacId == queryParametri.IdProdavca);
-            }
-            List<Narudzbina> narudzbine = query.ToList();
-            return _mapper.Map<List<NarudzbinaDto>>(narudzbine);
+            List<NarudzbinaDto> narudzbine = _mapper.Map<List<NarudzbinaDto>>(_context.Narudzbina.ToList());
+            return narudzbine;
         }
 
-        public NarudzbinaDto UpdateNarudzbinak(long id, NarudzbinaDto newNarudzbina)
+        public NarudzbinaDto UpdateNarudzbinak(NarudzbinaDto newNarudzbina, int id)
         {
+
             Narudzbina narudzbina = _context.Narudzbina.Find(id);
             narudzbina.Status = newNarudzbina.Status;
             narudzbina.Adresa = newNarudzbina.Adresa;
